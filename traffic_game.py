@@ -16,15 +16,16 @@ def new_id():hasher = md5(); hasher.update(str(now())); return hasher.hexdigest(
 
 SIM_TIME, SIM_NODES, SIM_TITLE = map(try_float,sys.argv[1:])
 
-global ROUTES, VALVES, CARS, HERE
+global ROUTES, VALVES, CARS, here, slash
 
 ROUTES = []; VALVES = []; CARS = []
 
-HERE = os.getcwd()
-if "\\" in HERE:
-    HERE+="\\"
+here = os.getcwd()
+if "\\" in here:
+    slash="\\"
 else:
-    HERE+="/"
+    slash="/"
+here+=slash
 
 def divider(t,nodes):
     div = t/nodes; return [node*div for node in xrange(int(nodes))]
@@ -56,15 +57,15 @@ def toggle_valve(id):
     UPDATE_VALVES(id,valve)
 
 def NewRouteChart(route_index,gen):
-    xy_chart = pygal.XY()
+    xy_chart = pygal.XY(show_y_labels=False,show_x_labels=False)
     xy_chart.title = SIM_TITLE
     route = ROUTES[route_index]; car_positions = []
     for car_id in route.cars:
         car = from_collection(CARS,car_id)
         node = route.nodes[car.node]
         car_positions.append((node["x"],node["y"]))
-    xy_chart.add('Route', car_positions)
-    xy_chart.render_to_file(HERE+"%s.svg"%gen)
+    xy_chart.add('Cars', car_positions)
+    xy_chart.render_to_file(here+"static%s%s.svg"%(slash,gen))
 
 class Route:
     def __init__(self,a,b,c,d,e):
@@ -101,8 +102,8 @@ class Valve:
                 success = True
             time.sleep(0.1)
         UPDATE_ROUTES(self.route.id,self.route)
-        # valve open by default
-        self.open = True
+        # valve open or closed
+        self.open = random_selection([True,False])
         VALVES.append(self)
 
 # Add Valves to the Environment
@@ -117,8 +118,10 @@ class Car:
         # bind car to route
         self.route = select_route()
         self.route.cars.append(self.id); UPDATE_ROUTES(self.route.id,self.route)
-        # enter route at node 0
-        self.node = 0
+        # enter route at next free forward node
+        self.node = len(CARS)+1
+        if self.node in self.route.valve_nodes:
+            self.node+=1
         CARS.append(self)
     def move(self):
         # CAR MOVEMENT FRAMEWORK
