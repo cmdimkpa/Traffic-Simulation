@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="myCanvas" data-refresh="{{ REFRESH_URL }}"></canvas>
+<script src="http://localhost:3434/assets/jquery-3.4.1.min.js"></script>
+<script>
+var laneStatus = [1,1,0,0];
+class asset {
+  constructor(rectX, rectY, rectHeight, rectWidth, stroke, fill, c) {
+    var radius = 5;
+    c.beginPath();
+    c.strokeStyle = stroke;
+    c.fillStyle = fill;
+    c.moveTo(rectX + rectWidth / 2, rectY);
+    c.arcTo(rectX + rectWidth, rectY, rectX + rectWidth, rectY + rectHeight, radius);
+    c.arcTo(rectX + rectWidth, rectY + rectHeight, rectX, rectY + rectHeight, radius);
+    c.arcTo(rectX, rectY + rectHeight, rectX, rectY, radius);
+    c.arcTo(rectX, rectY, rectX + rectWidth / 2, rectY, radius);
+    c.closePath();
+    c.fill();
+    c.stroke();
+  }
+}
+
+function animate() {
+  round++;
+  if (round < simulation_rounds){
+    var image = new Image();
+        image.src = "http://localhost:3434/assets/intersection.png";
+        image.onload = function () {
+          	ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+          };
+    for (i = 0; i < objects.length; i++) {
+      var o = objects[i]
+      new asset(o.x, o.y, o.w, o.h, o.stroke, o.fill, ctx);
+      if (laneStatus[o.lane-1] == 1){
+        o.x += o.speed.x
+        o.y += o.speed.y
+      } else {
+        if (o.lane == 1){
+          if (o.x > o.braking){
+            o.x += o.speed.x
+            o.y += o.speed.y
+          }
+        }else{
+          if (o.lane == 2){
+            if(o.braking>o.x){
+              o.x += o.speed.x
+              o.y += o.speed.y
+            }
+          }else{
+            if(o.lane == 3){
+              if (o.y > o.braking){
+                o.x += o.speed.x
+                o.y += o.speed.y
+              }
+            }else{
+              if (o.braking > o.y){
+                o.x += o.speed.x
+                o.y += o.speed.y
+              }
+            }
+          }
+        }
+      }
+      if (round%traffic_round == 0){
+        if (o.fill == "green"){
+          o.fill = "red";
+          laneStatus[o.lane-1] = 0;
+        }else{
+          if (o.fill == "red"){
+            o.fill = "green";
+            laneStatus[o.lane-1] = 1;
+          }
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  } else {
+    window.location.href = $("#myCanvas").data("refresh");
+  }
+}
+
+var canvas = document.body.querySelector("#myCanvas");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+var ctx = canvas.getContext("2d");
+var round = 0; var simulation_rounds = 600; var traffic_round = 150
+
+{{  DYNAMIC_CODE|safe  }}
+
+animate();
+</script>
+</body>
+</html>
