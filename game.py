@@ -38,6 +38,20 @@ def simulator():
     REFRESH_URL = request.url
     params = dict(request.args)
     params = {key.lower():params[key][-1] for key in params}
+    if "sim_rounds" in params:
+        try:
+            SIM_ROUNDS = int(float(params["sim_rounds"]))
+        except:
+            SIM_ROUNDS = 700
+    else:
+        SIM_ROUNDS = 700
+    if "tl_interval" in params:
+        try:
+            TL_INTERVAL = int(float(params["tl_interval"]))
+        except:
+            TL_INTERVAL = 100
+    else:
+        TL_INTERVAL = 100
     if "mode" in params:
         TRAFFIC_MODE = params["mode"]
     else:
@@ -96,7 +110,7 @@ def simulator():
     """
     DYNAMIC_CODE = DYNAMIC_CODE.replace("__CAR_DATA__",car_data(n_cars,s_cars))
     DYNAMIC_CODE = DYNAMIC_CODE.replace("__MODE__",TRAFFIC_MODE)
-    return render_template("game.html",DYNAMIC_CODE=DYNAMIC_CODE,REFRESH_URL=REFRESH_URL,TRAFFIC_MODE=TRAFFIC_MODE,SIM_LASTED=SIM_LASTED)
+    return render_template("game.html",DYNAMIC_CODE=DYNAMIC_CODE,REFRESH_URL=REFRESH_URL,TRAFFIC_MODE=TRAFFIC_MODE,SIM_LASTED=SIM_LASTED,SIM_ROUNDS=SIM_ROUNDS,TL_INTERVAL=TL_INTERVAL)
 
 if __name__ == "__main__":
   app.run(port=3434,threaded=True)
