@@ -250,7 +250,7 @@ var canvas = document.body.querySelector("#myCanvas");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 var ctx = canvas.getContext("2d");
-var round = 0; var simulation_rounds = 1000; var traffic_round = 250
+var round = 0; var simulation_rounds = {{ SIM_ROUNDS }}; var traffic_round = {{ TL_INTERVAL }}
 
 {{  DYNAMIC_CODE|safe  }}
 
