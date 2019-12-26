@@ -166,6 +166,7 @@ def compare_data(cycles):
     for entry in report["wait_time"]["n_deadlock"]:
         row_html+="<td>%s</td><td>%s</td>" % ("-".join(map(str,entry[0])),"-".join(map(str,entry[1])))
     wait_time_success_scenarios_no_deadlock_table = wait_time_success_scenarios_no_deadlock_table.replace("__ROWS__",row_html)
+    refresh_data()
     return render_template("results.html",pass_rate_delta_chart=pass_rate_delta_chart,pass_rate_failed=report["pass_rate"]["failed"],pass_rate_passed=report["pass_rate"]["passed"],pass_rate_success_scenarios_deadlock_table=pass_rate_success_scenarios_deadlock_table,pass_rate_success_scenarios_no_deadlock_table=pass_rate_success_scenarios_no_deadlock_table,wait_time_delta_chart=wait_time_delta_chart,wait_time_failed=report["wait_time"]["failed"],wait_time_passed=report["wait_time"]["passed"],wait_time_success_scenarios_deadlock_table=wait_time_success_scenarios_deadlock_table,wait_time_success_scenarios_no_deadlock_table=wait_time_success_scenarios_no_deadlock_table,average_pass_rate_delta=average_pass_rate_delta,average_wait_time_delta=average_wait_time_delta)
 
 @app.route("/traffic/test/controller/<path:cycles>")
@@ -195,7 +196,7 @@ def controlled_test(cycles):
         url = "http://%s:%s/traffic/simulate?refresh_url=%s&tl_interval=%s&mode=%s&congestion=%s&speed=%s" % (SERVER_HOST,SERVER_PORT,refresh_url,TL,mode,C,S)
         return redirect(url,302)
     else:
-        return compare_data(cycles)
+        return compare_data(max_cycles)
 
 @app.route("/traffic/simulate")
 def simulator():
