@@ -14,7 +14,7 @@ SIM_RESULTS = {
     "Sensor":[],
     "last_settings":{"xdata":[]}
 }
-SERVER_PORT = 3434
+SERVER_PORT = 5000
 SERVER_HOST = "localhost"
 
 app = Flask(__name__)
