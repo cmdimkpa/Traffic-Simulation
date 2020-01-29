@@ -18,12 +18,6 @@ SERVER_PORT = 5000
 SERVER_HOST = "localhost"
 
 app = Flask(__name__)
-# app configuration
-app_settings = os.getenv(
-    'APP_SETTINGS',
-    'app.config.DevelopmentConfig'
-)
-app.config.from_object(app_settings)
 CORS(app)
 
 @app.route("/assets/<path:asset>")
