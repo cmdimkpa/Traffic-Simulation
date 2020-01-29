@@ -1,0 +1,283 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .button {
+    background-color: #ffa500;
+    border: none;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 12px;
+  }
+  </style>
+</head>
+<body
+<div>
+<button class="button" id="ca-widget"><b>Cars: </b>0</button>
+<button class="button" id="pr-widget"><b>Pass Ratio: </b></button>
+<button class="button" id="wt-widget"><b>Wait Time: </b></button>
+<button class="button" id="st-widget" style="background-color:green">Sim Status: <b>In Progress</b></button>
+<button class="button" id="mode-widget" onclick="toggleMode()" style="background-color:blue">Toggle mode:<b>{{ TRAFFIC_MODE }}</b></button>
+</div>
+<canvas id="myCanvas" data-refresh="{{ REFRESH_URL }}" data-duration={{ SIM_LASTED }}></canvas>
+<script src="http://{{ SERVER_HOST }}:{{ SERVER_PORT }}/assets/jquery-3.4.1.min.js"></script>
+<script>
+
+var collision_limit = 20;
+
+function toggleMode(){
+  var mode_text = $("#mode-widget").text();
+  if (mode_text.includes("Normal")){
+    window.location.href = $("#myCanvas").data("refresh").split("&mode=Normal")[0]+"&mode=Sensor Network (Consensus Algorithm)";
+  }else{
+    window.location.href = $("#myCanvas").data("refresh").split("&mode=Sensor Network (Consensus Algorithm)")[0]+"&mode=Normal";
+  }
+}
+
+function dist(x1,x2,y1,y2){
+  return Math.sqrt(((x2-x1)**2)+((y2-y1)**2));
+}
+
+function collisions(self){
+  var collide = 0;
+  for (var i=0;i<objects.length;i++){
+    var o = objects[i];
+    if (o.lane != self.lane){
+      if (dist(self.x+self.speed.x,o.x,self.y+self.speed.y,o.y) <= collision_limit){collide++; self.collision=true; self.fill ="red"; o.collision = true; o.fill = "red"};
+    } else {
+      if (o.collision){collide++};
+    }
+  }
+  return collide;
+}
+
+function passedCount(){
+  var passed = 0;
+  for (var i=0;i<objects.length;i++){
+    o = objects[i];
+    if (o.lane == 1){
+      if (o.x > o.braking){
+        passed++
+      }
+    }else{
+      if (o.lane == 2){
+        if(o.braking>o.x){
+          passed++
+        }
+      }else{
+        if(o.lane == 3){
+          if (o.y > o.braking){
+            passed++
+          }
+        }else{
+          if (o.braking > o.y){
+            passed++
+          }
+        }
+      }
+    }
+  }
+  return passed
+}
+
+function is_deadlock(){
+  var exist = false;
+  for (var k = 0;k<objects.length-4;k++){
+    if(objects[k].fill == "red"){
+      exist = true;
+    }
+  }
+  return exist
+}
+
+function report(pass_rate,wait_time){
+  var deadlock = is_deadlock();
+  var mode = "Normal";
+  if ($("#mode-widget").text().includes("Sensor")){
+    mode = "Sensor";
+  }
+  $.get(`http://{{ SERVER_HOST }}:{{ SERVER_PORT }}/traffic/analytics/store?pass_rate=${pass_rate}&wait_time=${wait_time}&mode=${mode}&deadlock=${deadlock}`, function( data ) {});
+}
+
+function passedArray(){
+  var passed = [0,0,0,0];
+  for (var i=0;i<objects.length;i++){
+    o = objects[i];
+    if (o.lane == 1){
+      if (o.x > o.braking){
+        passed[o.lane-1]++
+      }
+    }else{
+      if (o.lane == 2){
+        if(o.braking>o.x){
+          passed[o.lane-1]++
+        }
+      }else{
+        if(o.lane == 3){
+          if (o.y > o.braking){
+            passed[o.lane-1]++
+          }
+        }else{
+          if (o.braking > o.y){
+            passed[o.lane-1]++
+          }
+        }
+      }
+    }
+  }
+  return passed
+}
+
+function congestion(){
+  var result = [0,0,0,0];
+  for (var i=0;i<objects.length;i++){
+    var o = objects[i];
+    result[o.lane-1]++
+  }
+  return result;
+}
+
+var laneStatus = [1,1,0,0];
+class asset {
+  constructor(rectX, rectY, rectHeight, rectWidth, stroke, fill, c) {
+    var radius = 5;
+    c.beginPath();
+    c.strokeStyle = stroke;
+    c.fillStyle = fill;
+    c.moveTo(rectX + rectWidth / 2, rectY);
+    c.arcTo(rectX + rectWidth, rectY, rectX + rectWidth, rectY + rectHeight, radius);
+    c.arcTo(rectX + rectWidth, rectY + rectHeight, rectX, rectY + rectHeight, radius);
+    c.arcTo(rectX, rectY + rectHeight, rectX, rectY, radius);
+    c.arcTo(rectX, rectY, rectX + rectWidth / 2, rectY, radius);
+    c.closePath();
+    c.fill();
+    c.stroke();
+  }
+}
+
+function animate() {
+  round++;
+  if (round < simulation_rounds){
+    var image = new Image();
+        image.src = "http://{{ SERVER_HOST }}:{{ SERVER_PORT }}/assets/intersection.png";
+        image.onload = function () {
+          	ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+          };
+    for (i = 0; i < objects.length; i++) {
+      var o = objects[i]
+      new asset(o.x, o.y, o.w, o.h, o.stroke, o.fill, ctx);
+      if (laneStatus[o.lane-1] == 1){
+        if(collisions(o) == 0){
+          o.x += o.speed.x
+          o.y += o.speed.y
+        }
+      } else {
+        if (o.lane == 1){
+          if (o.x > o.braking){
+            if(collisions(o) == 0){
+              o.x += o.speed.x
+              o.y += o.speed.y
+            }
+          }
+        }else{
+          if (o.lane == 2){
+            if(o.braking>o.x){
+              if(collisions(o) == 0){
+                o.x += o.speed.x
+                o.y += o.speed.y
+              }
+            }
+          }else{
+            if(o.lane == 3){
+              if (o.y > o.braking){
+                if(collisions(o) == 0){
+                  o.x += o.speed.x
+                  o.y += o.speed.y
+                }
+              }
+            }else{
+              if (o.braking > o.y){
+                if(collisions(o) == 0){
+                  o.x += o.speed.x
+                  o.y += o.speed.y
+                }
+              }
+            }
+          }
+        }
+      }
+      if (round%traffic_round == 0){
+        if (TRAFFIC_MODE == "Normal"){
+          if (o.fill == "green"){
+            o.fill = "red";
+            laneStatus[o.lane-1] = 0;
+          }else{
+            if (o.fill == "red"){
+              o.fill = "green";
+              laneStatus[o.lane-1] = 1;
+            }
+          }
+        }else{
+          if (o.fill == "red" || o.fill == "green"){
+            // block everyone temporarily
+            o.fill = "red";
+            laneStatus[o.lane-1] = 0;
+            // network consensus
+            var pop0 = congestion();
+            var passed = passedArray();
+            var pop = [];
+            for (var k=0;k<4;k++){
+              pop.push(pop0[k] - passed[k])
+            }
+            var maxLane = 1+pop.indexOf(Math.max(...pop));
+            for (var lane=1;lane<5;lane++){
+              if(o.lane == maxLane){
+                // release me
+                if (o.fill == "red"){
+                  o.fill = "green";
+                  laneStatus[o.lane-1] = 1;
+                  // release my non-adversarial
+                  var nonAdv = -1;
+                  if (o.lane == 1){nonAdv = 2}else{if (o.lane==2){nonAdv = 1}else{if (o.lane == 3){nonAdv=4}else{nonAdv=3}}}
+                  objects[cars+nonAdv-1].fill = "green";
+                  laneStatus[nonAdv-1] = 1;
+                  }
+                }
+              }
+            }
+          }
+        }
+    }
+    $("#pr-widget").html(`<b>Pass Ratio: </b>${parseInt(100*passedCount()/cars)}%`);
+    $("#wt-widget").html(`<b>Wait Time: </b>${parseInt((1-(passedCount()/cars))*$("#myCanvas").data("duration")/60)} min`);
+    requestAnimationFrame(animate);
+  } else {
+    $("#st-widget").css("background-color","red");
+    $("#st-widget").html("Sim Status: <b>Completed</b>");
+    report(parseInt(100*passedCount()/cars),parseInt((1-(passedCount()/cars))*$("#myCanvas").data("duration")/60))
+    setTimeout(()=>{window.location.href = $("#myCanvas").data("refresh");},10000);
+  }
+}
+
+var canvas = document.body.querySelector("#myCanvas");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+var ctx = canvas.getContext("2d");
+var round = 0; var simulation_rounds = {{ SIM_ROUNDS }}; var traffic_round = {{ TL_INTERVAL }}
+
+{{  DYNAMIC_CODE|safe  }}
+
+var cars = objects.length - 4;
+$("#ca-widget").html(`<b>Cars: </b>${cars}`)
+
+animate();
+</script>
+</body>
+</html>
