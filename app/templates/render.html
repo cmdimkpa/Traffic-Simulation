@@ -27,7 +27,7 @@
 <button class="button" id="mode-widget" onclick="toggleMode()" style="background-color:blue">Toggle mode:<b>{{ TRAFFIC_MODE }}</b></button>
 </div>
 <canvas id="myCanvas" data-refresh="{{ REFRESH_URL }}" data-duration={{ SIM_LASTED }}></canvas>
-<script src="http://{{ SERVER_HOST }}:{{ SERVER_PORT }}/assets/jquery-3.4.1.min.js"></script>
+<script src="https://traffic-simulator.herokuapp.com/assets/jquery-3.4.1.min.js"></script>
 <script>
 
 var collision_limit = 20;
@@ -103,7 +103,7 @@ function report(pass_rate,wait_time){
   if ($("#mode-widget").text().includes("Sensor")){
     mode = "Sensor";
   }
-  $.get(`http://{{ SERVER_HOST }}:{{ SERVER_PORT }}/traffic/analytics/store?pass_rate=${pass_rate}&wait_time=${wait_time}&mode=${mode}&deadlock=${deadlock}`, function( data ) {});
+  $.get(`https://traffic-simulator.herokuapp.com/traffic/analytics/store?pass_rate=${pass_rate}&wait_time=${wait_time}&mode=${mode}&deadlock=${deadlock}`, function( data ) {});
 }
 
 function passedArray(){
@@ -166,7 +166,7 @@ function animate() {
   round++;
   if (round < simulation_rounds){
     var image = new Image();
-        image.src = "http://{{ SERVER_HOST }}:{{ SERVER_PORT }}/assets/intersection.png";
+        image.src = "https://traffic-simulator.herokuapp.com/assets/intersection.png";
         image.onload = function () {
           	ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
           };
