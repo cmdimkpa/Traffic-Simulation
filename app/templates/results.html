@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Traffic Simulation Results Page</title>
+  </head>
+  <body>
+    <div>
+      <h2>Sensor Performance by Pass Rate</h2>
+      <img src="{{ pass_rate_delta_chart }}">
+      <p><b>Failed: </b>{{ pass_rate_failed }}</p>
+      <p><b>Passed: </b>{{ pass_rate_passed }}</p>
+      <p><b>Average Improvement (%): </b>{{ average_pass_rate_delta }}</p>
+        <div>
+          <h3>Success Scenarios With Deadlock</h3>
+          {{ pass_rate_success_scenarios_deadlock_table|safe }}
+        </div>
+        <div>
+          <h3>Success Scenarios No Deadlock</h3>
+          {{ pass_rate_success_scenarios_no_deadlock_table|safe }}
+        </div>
+    </div>
+    <div>
+      <h2>Sensor Performance by Wait Time</h2>
+      <img src="{{ wait_time_delta_chart }}">
+      <p><b>Failed: </b>{{ wait_time_failed }}</p>
+      <p><b>Passed: </b>{{ wait_time_passed }}</p>
+      <p><b>Average Improvement (%): </b>{{ average_wait_time_delta }}</p>
+        <div>
+          <h3>Success Scenarios With Deadlock</h3>
+          {{ wait_time_success_scenarios_deadlock_table|safe }}
+        </div>
+        <div>
+          <h3>Success Scenarios No Deadlock</h3>
+          {{ wait_time_success_scenarios_no_deadlock_table|safe }}
+        </div>
+    </div>
+  </body>
+</html>
