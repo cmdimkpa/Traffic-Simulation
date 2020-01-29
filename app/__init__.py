@@ -192,8 +192,8 @@ def controlled_test(cycles):
         else:
             mode = "Sensor"
             TL,C,S = SIM_RESULTS["last_settings"]["xdata"][cycles - (max_cycles+1)]
-        refresh_url = "http://%s:%s/traffic/test/controller/%s" % (SERVER_HOST,SERVER_PORT,cycles)
-        url = "http://%s:%s/traffic/simulate?refresh_url=%s&tl_interval=%s&mode=%s&congestion=%s&speed=%s" % (SERVER_HOST,SERVER_PORT,refresh_url,TL,mode,C,S)
+        refresh_url = "https://traffic-simulator.herokuapp.com/traffic/test/controller/%s" % (cycles)
+        url = "https://traffic-simulator.herokuapp.com/traffic/simulate?refresh_url=%s&tl_interval=%s&mode=%s&congestion=%s&speed=%s" % (refresh_url,TL,mode,C,S)
         return redirect(url,302)
     else:
         return compare_data(max_cycles)
@@ -290,7 +290,7 @@ def simulator():
     """
     DYNAMIC_CODE = DYNAMIC_CODE.replace("__CAR_DATA__",car_data(n_cars,s_cars))
     DYNAMIC_CODE = DYNAMIC_CODE.replace("__MODE__",TRAFFIC_MODE)
-    return render_template("render.html",DYNAMIC_CODE=DYNAMIC_CODE,REFRESH_URL=REFRESH_URL,TRAFFIC_MODE=TRAFFIC_MODE,SIM_LASTED=SIM_LASTED,SIM_ROUNDS=SIM_ROUNDS,TL_INTERVAL=TL_INTERVAL,SERVER_PORT=SERVER_PORT,SERVER_HOST=SERVER_HOST)
+    return render_template("render.html",DYNAMIC_CODE=DYNAMIC_CODE,REFRESH_URL=REFRESH_URL,TRAFFIC_MODE=TRAFFIC_MODE,SIM_LASTED=SIM_LASTED,SIM_ROUNDS=SIM_ROUNDS,TL_INTERVAL=TL_INTERVAL)
 
 if __name__ == "__main__":
   app.run(host=SERVER_HOST,port=SERVER_PORT,threaded=True)
