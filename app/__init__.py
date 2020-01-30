@@ -171,32 +171,35 @@ def compare_data(cycles):
 
 @app.route("/traffic/test/controller/<path:cycles>")
 def controlled_test(cycles):
-    global SIM_RESULTS
-    max_cycles = 100
-    def r_tl():return int(50 + random()*150)
-    def r_cs():return 0.1 + random()*0.9
     try:
-        cycles = int(float(cycles))
-    except:
-        cycles = -1
-    cycles+=1
-    if cycles <= 2*max_cycles:
-        if cycles == 0:
-            refresh_data()
-        if cycles <= max_cycles:
-            mode = "Normal"
-            TL = r_tl()
-            C = ",".join(map(str,[r_cs() for i in xrange(4)]))
-            S = ",".join(map(str,[r_cs() for i in xrange(4)]))
-            SIM_RESULTS["last_settings"]["xdata"].append((TL,C,S))
+        global SIM_RESULTS
+        max_cycles = 100
+        def r_tl():return int(50 + random()*150)
+        def r_cs():return 0.1 + random()*0.9
+        try:
+            cycles = int(float(cycles))
+        except:
+            cycles = -1
+        cycles+=1
+        if cycles <= 2*max_cycles:
+            if cycles == 0:
+                refresh_data()
+            if cycles <= max_cycles:
+                mode = "Normal"
+                TL = r_tl()
+                C = ",".join(map(str,[r_cs() for i in xrange(4)]))
+                S = ",".join(map(str,[r_cs() for i in xrange(4)]))
+                SIM_RESULTS["last_settings"]["xdata"].append((TL,C,S))
+            else:
+                mode = "Sensor"
+                TL,C,S = SIM_RESULTS["last_settings"]["xdata"][cycles - (max_cycles+1)]
+            refresh_url = "https://traffic-simulator.herokuapp.com/traffic/test/controller/%s" % (cycles)
+            url = "https://traffic-simulator.herokuapp.com/traffic/simulate?refresh_url=%s&tl_interval=%s&mode=%s&congestion=%s&speed=%s" % (refresh_url,TL,mode,C,S)
+            return redirect(url,302)
         else:
-            mode = "Sensor"
-            TL,C,S = SIM_RESULTS["last_settings"]["xdata"][cycles - (max_cycles+1)]
-        refresh_url = "https://traffic-simulator.herokuapp.com/traffic/test/controller/%s" % (cycles)
-        url = "https://traffic-simulator.herokuapp.com/traffic/simulate?refresh_url=%s&tl_interval=%s&mode=%s&congestion=%s&speed=%s" % (refresh_url,TL,mode,C,S)
-        return redirect(url,302)
-    else:
-        return compare_data(max_cycles)
+            return compare_data(max_cycles)
+    except:
+        return redirect("https://traffic-simulator.herokuapp.com/traffic/test/controller/0", 302)
 
 @app.route("/traffic/simulate")
 def simulator():
